@@ -232,6 +232,7 @@ button:disabled {
     color: #2d3748;
     line-height: 1.7;
     font-weight: 500;
+    white-space: pre-line;
 }
 
 .read-more-btn {

@@ -82,10 +82,13 @@ function displayDreams(dreams) {
     }
 
     dreamsContainer.innerHTML = dreams.map(dream => {
-        const interpretation = escapeHtml(dream.interpretation);
+        const fullText = dream.interpretation || '';
         const truncationLength = 300;
-        const shouldTruncate = interpretation.length > truncationLength;
-        const truncatedInterpretation = shouldTruncate ? interpretation.substring(0, truncationLength) + '...' : interpretation;
+        const shouldTruncate = fullText.length > truncationLength;
+        // Cut at the last space so words aren't split, then escape for display
+        const preview = fullText.substring(0, truncationLength);
+        const truncatedInterpretation = escapeHtml(shouldTruncate ? preview.substring(0, preview.lastIndexOf(' ')) + '...' : fullText);
+        const interpretation = escapeHtml(fullText);
 
         return `
         <div class="dream-card" data-id="${dream.id}">
@@ -98,9 +101,8 @@ function displayDreams(dreams) {
             </div>
             <div class="interpretation">
                 <h3>💭 Interpretation</h3>
-                <div class="interpretation-text interpretation-expandable" data-full="${interpretation}" data-truncated="${truncatedInterpretation}" data-expanded="false">
-                    ${truncatedInterpretation}
-                </div>
+                <div class="interpretation-text interpretation-preview">${truncatedInterpretation}</div>
+                ${shouldTruncate ? `<div class="interpretation-text interpretation-full" hidden>${interpretation}</div>` : ''}
                 ${shouldTruncate ? `<button class="read-more-btn">Read More</button>` : ''}
             </div>
         </div>
@@ -162,18 +164,14 @@ function escapeHtml(text) {
 function toggleInterpretation(event) {
     event.preventDefault();
     const btn = event.target;
-    const interpretationDiv = btn.previousElementSibling;
-    const isExpanded = interpretationDiv.dataset.expanded === 'true';
-    
-    if (isExpanded) {
-        interpretationDiv.textContent = interpretationDiv.dataset.truncated;
-        interpretationDiv.dataset.expanded = 'false';
-        btn.textContent = 'Read More';
-    } else {
-        interpretationDiv.textContent = interpretationDiv.dataset.full;
-        interpretationDiv.dataset.expanded = 'true';
-        btn.textContent = 'Read Less';
-    }
+    const container = btn.closest('.interpretation');
+    const preview = container.querySelector('.interpretation-preview');
+    const full = container.querySelector('.interpretation-full');
+    const isExpanded = !full.hidden;
+
+    full.hidden = isExpanded;
+    preview.hidden = !isExpanded;
+    btn.textContent = isExpanded ? 'Read More' : 'Read Less';
 }
 
 // Show error message to user
